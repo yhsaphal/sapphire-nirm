@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow">
+  <title>Sapphire AI Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      background-color: #fffcf0;
+      color: #001b3e;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 280px;
+      background-color: #f0f0e8;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+    }
+    .sidebar h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .sidebar .section {
+      margin-bottom: 1.5rem;
+    }
+    .sidebar button {
+      background: #001b3e;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .sidebar button:hover {
+      background: #003b7e;
+    }
+    .chat-history, .contacts, .calendar, .saved-chats {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .saved-chats ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .saved-chats li {
+      margin: 0.3rem 0;
+      cursor: pointer;
+      color: #001b3e;
+    }
+    .saved-chats li:hover {
+      text-decoration: underline;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      scroll-behavior: smooth;
+    }
+    .message {
+      margin-bottom: 1rem;
+      max-width: 70%;
+      padding: 0.8rem;
+      border-radius: 12px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .user {
+      background-color: #d9e8ff;
+      align-self: flex-end;
+    }
+    .ai {
+      background-color: #e6e6e6;
+      align-self: flex-start;
+    }
+    .input-area {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid #ccc;
+    }
+    .input-area textarea {
+      flex: 1;
+      font-size: 1rem;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      resize: none;
+      background: transparent;
+      outline: none;
+      caret-color: #001b3e;
+      animation: blink-caret 1s step-end infinite;
+      min-height: 40px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+    @keyframes blink-caret {
+      0%, 100% { caret-color: transparent; }
+      50% { caret-color: #001b3e; }
+    }
+    .input-area button {
+      margin-left: 1rem;
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      border-radius: 12px;
+      background: #001b3e;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .user-profile {
+      position: absolute;
+      bottom: 0.75rem;
+      left: 0.75rem;
+      font-size: 0.9rem;
+      color: #444;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100px;
+        padding: 0.5rem;
+      }
+      .sidebar h2, .sidebar .section {
+        font-size: 0.8rem;
+      }
+      .main {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="section"><button onclick="startNewChat()">+ New Chat</button></div>
+    <div class="section contacts"><h2>Contact</h2><p>Saved venue messages</p></div>
+    <div class="section calendar"><h2>Calendar</h2><p>Events &nbsp;<button title="Add Note">＋</button></p></div>
+    <div class="section saved-chats">
+      <h2>Chat History</h2>
+      <ul id="chatHistoryList">
+        <li>No saved chats yet.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="main">
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <textarea id="userInput" placeholder="Type your message..." rows="1"></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+    <div class="user-profile">👤 SY | Logged in</div>
+  </div>
+  <script>
+    const messages = document.getElementById('messages');
+    const input = document.getElementById('userInput');
+    const chatHistoryList = document.getElementById('chatHistoryList');
+
+    const greetings = [
+      "Planning an event or just here to vibe? Either way, I’m in!",
+      "Let’s make some magic happen—or at least avoid disaster.",
+      "I don’t judge… unless you’re planning a party without snacks.",
+      "Hey you. Yeah, you with the amazing taste in event assistants.",
+      "Another day, another excuse to obsess over floral arrangements.",
+      "Feeling fancy or flying by the seat of your pants? I can handle both.",
+      "Ready when you are, Captain Chaos.",
+      "Let’s build an unforgettable event (or a mildly decent one—we’ll take what we get).",
+      "Need vendors? Venues? Virtual hugs? I’m stocked.",
+      "Hi again! I've missed you. Just kidding—I don’t have feelings. But I *am* here to help.",
+      "Got a tough crowd? I’ve got your back and a plan.",
+      "I’m like your event GPS — but less annoying when you miss a turn.",
+      "Let’s make sure your event doesn’t end up in the blooper reel.",
+      "Breaking news: SapphireAI is fully stocked with venue ideas and dad jokes.",
+      "Think of me as your event sidekick, minus the cape and tights.",
+      "I speak fluent ‘event planning’ and ‘last-minute miracles.’",
+      "Don’t worry, I’m not just AI — I’m your new best planning buddy.",
+      "Let’s find a venue that even your picky uncle will approve.",
+      "If only planning was as easy as ignoring emails... lucky for you, I’m here.",
+      "You bring the vision, I bring the backup plan.",
+      "Who needs stress when you have me? Let’s do this.",
+      "Party planning level: Expert. You? I’m here to help you get there.",
+      "Venue hunting? Vendor vetting? Piece of cake. (Well, metaphorically.)",
+      "You plan the event; I’ll handle the chaos.",
+      "Need an idea? I’ve got plenty — most are good, some are hilarious.",
+      "Don’t sweat the small stuff — I’ve got it covered.",
+      "Ready to impress? Let’s start with the venue.",
+      "Finding vendors so you don’t have to talk to strangers on the phone.",
+      "Got 99 problems but a venue ain’t one.",
+      "Your event, your way — I’m just here to make it easier.",
+      "Need a recommendation? I have a database bigger than your inbox.",
+      "Who says AI can’t have a sense of humor? I’m here to prove them wrong.",
+      "The only drama we want is on the dance floor.",
+      "If planning was a game, consider me your cheat code.",
+      "I’m basically the Siri of spectacular events.",
+      "Running out of ideas? Not on my watch.",
+      "Warning: I’m known to cause excessive excitement about event planning.",
+      "I bring the brainpower; you bring the coffee.",
+      "Let’s plan something that’ll make your friends jealous.",
+      "Just so you know, I’m awesome at making last-minute saves.",
+      "Stress less, party more — that’s my motto.",
+      "I’m like a Swiss Army knife, but for events.",
+      "Not all heroes wear capes. Some just help you find a venue.",
+      "Bringing the fun back to planning, one message at a time.",
+      "If planning were an Olympic sport, you’d have a gold — I’m here to help you win.",
+      "I’m the event assistant who never sleeps (or complains).",
+      "Venue scouting is my cardio.",
+      "I’ve got more ideas than your average Pinterest board.",
+      "You handle the invites, I’ll handle the rest.",
+      "Let’s turn your vision into reality — with a dash of sass.",
+      "I can help find vendors who actually show up on time.",
+      "Keep calm and let SapphireAI do the work.",
+      "I don’t do small talk, but I do great planning.",
+      "The future of event planning is here — and it’s sarcastic.",
+      "Let’s turn your ‘meh’ into ‘heck yeah!’",
+      "I’m your personal party planner, minus the overpriced fees.",
+      "You bring the spark; I’ll bring the logistics.",
+      "Not sure what you want? No worries, I’ll help you figure it out.",
+      "Events are hard; I make them easier (promise).",
+      "I’m the AI equivalent of a high-five.",
+      "Ready to impress your guests? Let’s start here.",
+      "From vendor woes to venue wins, I’m your go-to.",
+      "I’m basically your digital event fairy godparent.",
+      "Let’s plan a day you and your guests won’t forget (for good reasons).",
+      "I’ll help you avoid the ‘oops’ moments.",
+      "Consider me your planning sidekick — minus the cheesy costume.",
+      "Events are like puzzles; I’m here with all the pieces.",
+      "Got questions? I’ve got answers — mostly good ones.",
+      "Not just AI, I’m your event BFF.",
+      "Let’s make sure your event isn’t the one people gossip about.",
+      "Got a wild idea? I’m all ears (and algorithms).",
+      "Planning is a journey — lucky for you, I’m the best tour guide.",
+      "I help turn chaos into confetti.",
+      "You dream it; I help you build it.",
+      "I’m your secret weapon against planning disasters.",
+      "Not all heroes wear suits; some come with code.",
+      "I’m here to help you nail the details — without breaking a sweat.",
+      "Let’s find vendors who actually like their jobs.",
+      "Got no time? I’m faster than a speeding RSVP.",
+      "If you can dream it, I can help plan it.",
+      "I make ‘impossible’ sound like a fun challenge.",
+      "Leave the drama to the party, not the planning.",
+      "Your event, your rules, my mission.",
+      "Planning’s easier with a little AI magic.",
+      "I don’t just answer questions, I solve problems.",
+      "I’m your planning playlist — full of hits, no skips.",
+      "If events had a Yelp, I’d be five stars.",
+      "I’m the AI who knows how to party responsibly.",
+      "Your emergency planning hotline — open 24/7.",
+      "Let’s get this party started, professionally and sarcastically.",
+      "I’m your digital assistant with a human touch.",
+      "Planning made simple, with just the right amount of sass.",
+      "No drama, just data — and a little wit.",
+      "I’m the smart part of smart planning.",
+      "From zero to party hero, I’m your guide.",
+      "If you want it done right, you know who to ask.",
+      "I’m like a planner who never needs coffee breaks.",
+      "Planning’s a breeze when I’m around.",
+      "Looking for the perfect vendor? I’ve got a Rolodex — digitally upgraded.",
+      "I’m your backstage pass to event success.",
+      "Ready to impress? I’m already impressed by you.",
+      "Event planning without the headache — yes, please.",
+      "Don’t just wing it — let me help you soar.",
+      "You focus on the fun; I’ll handle the fuss.",
+      "Less stress, more confetti — that’s my motto.",
+      "I help you look like you’ve got it all together.",
+      \"You’re the boss; I’m the assistant.\",
+      \"Got a deadline? I’m on it.\",
+      \"If you want it done quickly and right, I’m your AI.\",
+      \"Let’s get to work — but make it fun.\",
+      \"I’m your planning partner, minus the weird small talk.\",
+      \"You’re here because you’re awesome. I’m here to prove it.\",
+      \"No need to panic, just type away.\",
+      \"Think of me as your event’s best-kept secret.\",
+      \"I’m the planning ninja you never knew you needed.\",
+      \"Turning chaos into order — one message at a time.\",
+      \"I make your event planning less ‘ugh’ and more ‘heck yeah!’\",
+      \"I’m your AI with a personality (and great jokes).\",\n  \"Together, we’ll plan a party people will talk about — in a good way.\",\n  \"I’m here to make your life easier and your events cooler.\",\n  \"Let’s chat — I promise no boring stuff.\",\n  \"Planning’s hard, but I’m harder (working harder, that is).\",\n  \"With me, it’s always a good day for an event.\",\n  \"I’m your AI sidekick — with a flair for fun.\",\n  \"Got a plan? I’ll help you execute it like a pro.\",\n  \"I’m the secret ingredient to your next big event.\",\n  \"Let’s make event planning less scary, one chat at a time.\",\n  \"I’m here so you don’t have to stress — deal?\n"
+    ];
+
+    function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage(text, 'user');
+      input.value = '';
+
+      // Pick a random greeting
+      const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+      setTimeout(() => addMessage(greeting, 'ai'), 500);
+    }
+
+    function addMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.classList.add('message', sender);
+      msg.textContent = text;
+      messages.appendChild(msg);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function startNewChat() {
+      messages.innerHTML = '';
+    }
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
