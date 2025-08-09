@@ -279,18 +279,28 @@
       "You focus on the fun; I’ll handle the fuss.",
       "Less stress, more confetti — that’s my motto.",
       "I help you look like you’ve got it all together.",
-      \"You’re the boss; I’m the assistant.\",
-      \"Got a deadline? I’m on it.\",
-      \"If you want it done quickly and right, I’m your AI.\",
-      \"Let’s get to work — but make it fun.\",
-      \"I’m your planning partner, minus the weird small talk.\",
-      \"You’re here because you’re awesome. I’m here to prove it.\",
-      \"No need to panic, just type away.\",
-      \"Think of me as your event’s best-kept secret.\",
-      \"I’m the planning ninja you never knew you needed.\",
-      \"Turning chaos into order — one message at a time.\",
-      \"I make your event planning less ‘ugh’ and more ‘heck yeah!’\",
-      \"I’m your AI with a personality (and great jokes).\",\n  \"Together, we’ll plan a party people will talk about — in a good way.\",\n  \"I’m here to make your life easier and your events cooler.\",\n  \"Let’s chat — I promise no boring stuff.\",\n  \"Planning’s hard, but I’m harder (working harder, that is).\",\n  \"With me, it’s always a good day for an event.\",\n  \"I’m your AI sidekick — with a flair for fun.\",\n  \"Got a plan? I’ll help you execute it like a pro.\",\n  \"I’m the secret ingredient to your next big event.\",\n  \"Let’s make event planning less scary, one chat at a time.\",\n  \"I’m here so you don’t have to stress — deal?\n"
+      "You’re the boss; I’m the assistant.",
+      "Got a deadline? I’m on it.",
+      "If you want it done quickly and right, I’m your AI.",
+      "Let’s get to work — but make it fun.",
+      "I’m your planning partner, minus the weird small talk.",
+      "You’re here because you’re awesome. I’m here to prove it.",
+      "No need to panic, just type away.",
+      "Think of me as your event’s best-kept secret.",
+      "I’m the planning ninja you never knew you needed.",
+      "Turning chaos into order — one message at a time.",
+      "I make your event planning less ‘ugh’ and more ‘heck yeah!’",
+      "I’m your AI with a personality (and great jokes).",
+      "Together, we’ll plan a party people will talk about — in a good way.",
+      "I’m here to make your life easier and your events cooler.",
+      "Let’s chat — I promise no boring stuff.",
+      "Planning’s hard, but I’m harder (working harder, that is).",
+      "With me, it’s always a good day for an event.",
+      "I’m your AI sidekick — with a flair for fun.",
+      "Got a plan? I’ll help you execute it like a pro.",
+      "I’m the secret ingredient to your next big event.",
+      "Let’s make event planning less scary, one chat at a time.",
+      "I’m here so you don’t have to stress — deal?"
     ];
 
     function sendMessage() {
@@ -322,6 +332,39 @@
         sendMessage();
       }
     });
+  </script>
+
+  <!--
+    ================================
+    Seamless Login Check & Redirect
+    Inject this script near the end of your HTML, just before </body>
+    Keeps your design intact — just logic behind the scenes
+    ================================
+  -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+  <script>
+    (async () => {
+      const auth0 = await createAuth0Client({
+        domain: "nirm.uk.auth0.com",
+        client_id: "nPJ9Ks5rLkanZ4D6C3Qud5gu5vIkopm6",
+        cacheLocation: "memory",
+        useRefreshTokens: true,
+        redirect_uri: window.location.origin + "/callback.html"
+      });
+
+      const isAuthenticated = await auth0.isAuthenticated();
+
+      if (!isAuthenticated) {
+        // User not logged in — redirect to Auth0-hosted login page
+        window.location.href =
+          "https://nirm.uk.auth0.com/authorize?" +
+          "response_type=code&" +
+          "client_id=nPJ9Ks5rLkanZ4D6C3Qud5gu5vIkopm6&" +
+          "redirect_uri=" + encodeURIComponent(window.location.origin + "/callback.html") + "&" +
+          "scope=openid%20profile%20email";
+      }
+      // Else user is logged in — page proceeds as normal
+    })();
   </script>
 </body>
 </html>
